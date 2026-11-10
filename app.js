@@ -28,7 +28,7 @@ const main = document.querySelector('main');
 const dialog = document.querySelector('dialog');
 const activity = document.querySelector('#activity');
 const key = 'religionssparet-v1';
-const defaults = {done:{}, xp:0, own:[], review:{}, notes:{}};
+const defaults = {done:{}, xp:0, own:[], review:{}, notes:{}, rounds:{}};
 let state = defaults;
 try { state = {...defaults, ...JSON.parse(localStorage.getItem(key))}; } catch {}
 const update = () => {
@@ -43,7 +43,7 @@ const routes = [
   ...courses.map(course => [course.id,course.name,course.symbol]),
   ['jamfor','Jämför','compare'],['kort','Flashcards','cards'],['ovningar','Övningar','game']
 ];
-const quickLinks = [['jamfor','Jämför religionerna','Åtta teman sida vid sida','compare'],
+const quickLinks = [['jamfor','Jämför religionerna','Teman och inriktningar sida vid sida','compare'],
   ['kort','Vänd ett kort','Färdiga begrepp och egna kort','cards'],
   ['ovningar','Testa dig själv','Quiz, matchning och tidslinje','game']];
 const nav = document.querySelector('#nav');
@@ -53,7 +53,7 @@ let cardIndex = 0;
 let flipped = false;
 const deck = [
   ...terms.map(([q,a], i) => ({id:'term-'+i,q,a,group:'begrepp'})),
-  ...courses.flatMap(course => course.quiz.map(([q,a], i) => ({id:course.id+'-'+i,q,a,group:course.id})))
+  ...courses.flatMap(course => topics.flatMap((_, i) => lessonQuestions(course, i).map(([q,a], j) => ({id:course.id+'-'+i+(j ? '-'+j : ''),q,a,group:course.id}))))
 ];
 
 function home() {
@@ -73,21 +73,36 @@ function home() {
     <div class="grid">${courses.map(course => `<a class="card ${course.color}" href="#${course.id}">${tile(course.symbol)}<h3>${course.name}</h3><p>${course.era}</p>${meter(Math.round(count(course)/6*100))}<div class="card-foot"><span>${count(course)} / 6 lektioner</span><span>→</span></div></a>`).join('')}</div></section>
     <section class="section"><div class="section-head"><h2>Öva på ditt sätt</h2></div>
     <div class="grid">${quickLinks.map(([path,label,desc,symbol]) => `<a class="card quick" href="#${path}">${tile(symbol)}<div><h3>${label}</h3><small>${desc}</small></div><span class="chevron">›</span></a>`).join('')}</div></section>
-    <div class="sources"><details><summary>Om innehållet</summary><p>Lektionerna bygger på det tillhandahållna studieunderlaget för Religion 1. För vidare läsning finns <a href="https://academic.oup.com/edited-volume/34340" target="_blank" rel="noopener noreferrer">The Oxford Handbook of the Abrahamic Religions</a>.</p></details></div>`;
+    <div class="sources"><details><summary>Om innehållet</summary><p>Lektionerna bygger på det tillhandahållna studieunderlaget för Religion 1. För vidare läsning finns <a href="https://academic.oup.com/edited-volume/34340" target="_blank" rel="noopener noreferrer">The Oxford Handbook of the Abrahamic Religions</a> och <a href="https://encyclopedia.ushmm.org/content/en/article/introduction-to-judaism">USHMM:s introduktion till judendom</a>. Om kyrkornas egna ställningstaganden finns <a href="https://www.svenskakyrkan.se/kvinnliga-praster">Svenska kyrkans material om prästämbetet</a>, <a href="https://www.svenskakyrkan.se/filer/Biskopsbrev-nattvarden.pdf">biskopsbrevet om nattvarden</a>, <a href="https://www.svenskakyrkan.se/nyheter/vagar-framat--om-vigsel-och-samkonade-relationer">Svenska kyrkans material om samkönad vigsel</a> och <a href="https://www.vatican.va/archive/compendium_ccc/documents/archive_2005_compendium-ccc_en.html">Katolska kyrkans katekes i sammanfattning</a>.</p></details></div>`;
+}
+
+function lessonText(course, index) {
+  return course.lessons[index].map(p => `<p>${p}</p>`).join('') +
+    lessonDepth[course.id][index].map(([heading, paragraph]) => `<h3 class="reading">${heading}</h3><p>${paragraph}</p>`).join('');
 }
 
 function coursePage(course) {
   return `<div class="course-top ${course.color}">${tile(course.symbol)}<span class="eyebrow">Studiespår · ${course.era}</span><h1>${course.name}</h1><p>${course.place}</p>${meter(Math.round(count(course)/6*100))}<div class="card-foot">${count(course)} av 6 lektioner klara</div></div>
-  <div class="trail">${topics.map(([name, desc], i) => `<article class="panel lesson ${course.color}"><span class="step" aria-label="${state.done[course.id+'-'+i] ? 'Klar' : 'Lektion '+(i+1)}">${state.done[course.id+'-'+i] ? '✓' : i+1}</span><div><h3>${name}</h3><p>${desc}</p></div><button class="btn" data-act="lesson" data-course="${course.id}" data-i="${i}">${state.done[course.id+'-'+i] ? 'Repetera' : 'Öppna'}</button></article>`).join('')}</div>
-  <section class="section"><h2>Alla sammanfattningar</h2><div class="panel">${topics.map(([name], i) => `<details class="reading"><summary>${name}</summary>${course.lessons[i].map(p => `<p>${p}</p>`).join('')}</details>`).join('')}</div></section>`;
+  <div class="trail">${topics.map(([name, desc], i) => `<article class="panel lesson ${course.color}"><span class="step" aria-label="${state.done[course.id+'-'+i] ? 'Klar' : 'Lektion '+(i+1)}">${state.done[course.id+'-'+i] ? '✓' : i+1}</span><div><h3>${name}</h3><p>${desc}</p></div><button class="btn" data-act="lesson" data-course="${course.id}" data-i="${i}">${state.rounds[course.id+'-'+i] ? 'Fortsätt' : state.done[course.id+'-'+i] ? 'Repetera' : 'Öppna'}</button></article>`).join('')}</div>
+  <section class="section"><h2>Alla sammanfattningar</h2><div class="panel">${topics.map(([name], i) => `<details class="reading"><summary>${name}</summary>${lessonText(course,i)}</details>`).join('')}</div></section>`;
+}
+
+function traditionPanels(index) {
+  const names = [4,5,8].includes(index) ? branchProfiles : [];
+  if (!names.length) return '';
+  return `<section class="section"><h2>Inriktningar inom religionerna</h2>
+    <div class="grid compare-grid">${courses.map((course,i) => `<article class="panel ${course.color}">
+    <h3>${course.name}</h3>${names[i].map(([heading,leadership,relationships,practice]) =>
+      `<details><summary>${heading}</summary><p>${index === 4 ? leadership : index === 5 ? relationships : practice}</p></details>`).join('')}</article>`).join('')}</div></section>`;
 }
 
 function comparePage() {
   const item = comparisons[comparison];
   return title('Jämför religionerna','Välj ett tema och läs de tre perspektiven sida vid sida.') +
   `<div class="chips" aria-label="Jämförelsetema">${comparisons.map(([name], i) => `<button class="chip" data-act="compare" data-i="${i}" aria-pressed="${i === comparison}">${name}</button>`).join('')}</div>
-  <section aria-label="${item[0]}" class="grid compare-grid">${courses.map((course,i) => `<article class="panel ${course.color}">${tile(course.symbol)}<h3>${course.name}</h3><p>${item[i+1]}</p></article>`).join('')}</section>
-  <aside class="callout"><h3>Så kan du resonera</h3><p>${item[4]}</p></aside>
+  <section aria-label="${item[0]}" class="grid compare-grid">${courses.map((course,i) => `<article class="panel ${course.color}">${tile(course.symbol)}<h3>${course.name}</h3><p>${item[i+1]}</p><p>${comparisonDepth[comparison][i]}</p></article>`).join('')}</section>
+  <aside class="callout"><h3>Så kan du resonera</h3><p>${item[4]}</p><p>${comparisonDepth[comparison][3]}</p></aside>
+  ${traditionPanels(comparison)}
   <section class="section"><h2>Skrivträning</h2><p class="muted">Utgå från ett konkret exempel. Förklara vad som skiljer sig, varför och vilka följder skillnaden kan få. Titta på texten, tolkningen och samhället.</p>
   <div class="panel">${writing.map(([name,q,answer], i) => `<details><summary>${name}</summary><p>${q}</p><label for="note-${i}">Ditt resonemang</label><textarea id="note-${i}" data-note="${i}">${esc(state.notes[i] || '')}</textarea><details><summary>Visa exempel på resonemang</summary><p>${answer}</p></details></details>`).join('')}</div></section>`;
 }
@@ -110,7 +125,7 @@ function cardsPage() {
 }
 
 function gamesPage() {
-  const games = [['quiz','Blandat quiz','Sex frågor om de tre religionerna.','spark'],
+  const games = [['quiz','Blandat quiz','Tolv frågor om de tre religionerna.','spark'],
     ['match','Matcha begrepp','Para ihop begrepp med rätt förklaring.','cards'],
     ['timeline','Bygg en tidslinje','Välj händelserna från äldst till nyast.','history']];
   return title('Övningar','Repetera med tre olika övningar och få återkoppling direkt.') +
@@ -137,15 +152,29 @@ function showActivity(label, body, moveFocus = true) {
 }
 let exercise;
 let opener;
-function startQuiz(questions, lesson) {
-  exercise = {type:'quiz',questions,index:0,score:0,lesson,choice:null,checked:false};
+function startQuiz(questions, lessonId) {
+  exercise = {questions, total:questions.length, index:0, missed:[], lessonId, retry:false, summary:false, choice:null, checked:false};
+  saveQuiz();
   showQuestion();
+}
+function saveQuiz() {
+  if (exercise.lessonId) {
+    state.rounds[exercise.lessonId] = exercise;
+    update();
+  }
+}
+function showRetry() {
+  const {missed, questions, retry} = exercise;
+  const count = missed.length;
+  showActivity('Resultat', `<p>${retry ? 'Du har fortfarande' : 'Du fick'} <strong>${count} fel av ${questions.length}</strong>.</p>
+    <p>Gör om de frågor du missade. XP delas ut när alla frågor är rätt besvarade.</p>
+    <button class="btn primary" data-act="retryQuiz">Gör om ${count === 1 ? 'frågan' : 'de '+count+' frågorna'}</button>`);
 }
 function showQuestion(moveFocus = true) {
   const round = exercise;
   const [question, correct] = round.questions[round.index];
   round.options ??= shuffle(round.questions[round.index].slice(1));
-  const label = round.lesson ? 'Kontrollfråga' : 'Blandat quiz';
+  const label = round.retry ? 'Repetera felsvar' : round.lessonId ? 'Lektionsquiz' : 'Blandat quiz';
   const good = round.choice === correct;
   showActivity(label, `<div class="counter">Fråga ${round.index+1} av ${round.questions.length}</div>
     ${meter(Math.round(round.index/round.questions.length*100))}<h3 class="reading">${question}</h3>
@@ -156,7 +185,7 @@ function showQuestion(moveFocus = true) {
 function finish(title, desc, xp) {
   state.xp += xp;
   render();
-  showActivity(title, `<div class="callout"><h3>+${xp} XP</h3><p>${desc}</p></div><button class="btn primary" data-act="close">Klart</button>`);
+  showActivity(title, `<div class="callout">${xp ? `<h3>+${xp} XP</h3>` : ''}<p>${desc}</p></div><button class="btn primary" data-act="close">Klart</button>`);
 }
 function showMatching(moveFocus = true) {
   const round = exercise;
@@ -181,15 +210,22 @@ const handlers = {
     const course = courses.find(item => item.id === id);
     exercise = {course,i};
     showActivity(topics[i][0], `<p class="eyebrow">${course.name} · Lektion ${Number(i)+1}</p>
-      ${course.lessons[i].map(p => `<p>${p}</p>`).join('')}
-      <button class="btn primary" data-act="lessonQuiz">Testa vad du kan</button>`);
+      ${lessonText(course,i)}
+      <button class="btn primary" data-act="lessonQuiz">${state.rounds[id+'-'+i] ? 'Fortsätt quiz' : 'Starta quiz · 10 frågor'}</button>`);
   },
   lessonQuiz() {
     const {course,i} = exercise;
-    startQuiz([course.quiz[i]], {course,i});
+    const id = course.id+'-'+i;
+    if (state.rounds[id]) {
+      exercise = state.rounds[id];
+      if (exercise.summary) showRetry();
+      else showQuestion();
+      return;
+    }
+    startQuiz(shuffle(lessonQuestions(course,i)), id);
   },
   quiz() {
-    startQuiz(shuffle(courses.flatMap(course => shuffle(course.quiz).slice(0,2))));
+    startQuiz(shuffle(courses.flatMap(course => shuffle(topics.map((_,i) => shuffle(lessonQuestions(course,i))[0])).slice(0,4))));
   },
   choose({i}) {
     exercise.choice = exercise.options[i];
@@ -198,7 +234,8 @@ const handlers = {
   },
   check() {
     exercise.checked = true;
-    if (exercise.choice === exercise.questions[exercise.index][1]) exercise.score++;
+    if (exercise.choice !== exercise.questions[exercise.index][1]) exercise.missed.push(exercise.questions[exercise.index]);
+    saveQuiz();
     showQuestion(false);
     activity.querySelector('[data-act="advance"]').focus();
   },
@@ -207,21 +244,26 @@ const handlers = {
     round.index++;
     if (round.index < round.questions.length) {
       Object.assign(round,{choice:null,checked:false,options:null});
+      saveQuiz();
       showQuestion();
-    } else if (round.lesson) {
-      const {course,i} = round.lesson;
-      if (round.score) {
-        const id = course.id+'-'+i;
-        const points = state.done[id] ? 0 : 10;
-        state.done[id] = true;
-        finish('Lektion klar',`Du har klarat ${topics[i][0].toLowerCase()} i studiespåret ${course.name}.`,points);
-      } else {
-        showActivity('Försök igen',`<p>Läs sammanfattningen igen och testa kontrollfrågan på nytt.</p>
-          <button class="btn primary" data-act="lesson" data-course="${course.id}" data-i="${i}">Till sammanfattningen</button>`);
-      }
+    } else if (round.missed.length) {
+      round.summary = true;
+      saveQuiz();
+      showRetry();
+    } else if (round.lessonId) {
+      const id = round.lessonId;
+      const points = state.done[id] ? 0 : 10;
+      state.done[id] = true;
+      delete state.rounds[id];
+      finish('Lektion klar', points ? 'Du har svarat rätt på alla 10 frågor.' : 'Du har svarat rätt på alla 10 frågor. Lektionens XP har redan delats ut.', points);
     } else {
-      finish('Quiz klart',`Du fick ${round.score} av ${round.questions.length} rätt.`,round.score*5);
+      finish('Quiz klart',`Du har svarat rätt på alla ${round.total} frågor.`,round.total*5);
     }
+  },
+  retryQuiz() {
+    Object.assign(exercise,{questions:shuffle(exercise.missed),index:0,missed:[],retry:true,summary:false,choice:null,checked:false,options:null});
+    saveQuiz();
+    showQuestion();
   },
   match() {
     exercise = {pairs:shuffle(terms).slice(0,4), right:shuffle([0,1,2,3]), matched:[], left:null, message:''};
@@ -316,6 +358,7 @@ document.addEventListener('click', event => {
   handlers[button.dataset.act](button.dataset);
 });
 dialog.addEventListener('close', () => {
+  if (opener?.act === 'lesson' && location.hash === '#'+opener.course) render();
   const buttons = [...main.querySelectorAll('[data-act]')];
   buttons.find(button => Object.entries(opener || {}).every(([key,value]) => button.dataset[key] === value))?.focus();
 });
