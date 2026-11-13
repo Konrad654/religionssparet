@@ -1,0 +1,42 @@
+<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Religionsspåret – animationskontroll</title>
+<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="owl-puppet.css">
+<style>body{padding:32px;max-width:850px;margin:auto}h1{font-size:28px}.owl-character{width:260px}.check-stage{display:flex;justify-content:center;align-items:center;background:#eee8ff;border-radius:24px;padding:15px;margin:24px 0}table{border-collapse:collapse;width:100%;background:white}th,td{padding:12px;border:1px solid #e8e2f1;text-align:left}#summary{padding:16px;background:white;border-radius:16px}small{color:#625b76}</style>
+<h1>Animationskontroll</h1><p>Kontrollerar rörelser, bildfrekvens och återgång till vila i den här webbläsaren.</p>
+<div class="check-stage" data-owl-host><div id="preview"></div><p data-owl-speech>Startar kontrollen.</p></div>
+<p id="summary" role="status">Mätning pågår.</p><table><thead><tr><th>Rörelse</th><th>Uppmätt fps</th><th>Olika ledpositioner</th><th>Återgår till vila</th></tr></thead><tbody id="results"></tbody></table>
+<script src="mascot.js"></script><script>
+document.querySelector('#preview').innerHTML=owlCharacter('idle');
+const host=document.querySelector('[data-owl-host]');
+const output=document.querySelector('#results');
+const checks=[['wave','Vinkning',1900],['think','Tänkande',2800],['celebrate','Glädjeskutt',1900]];
+async function measure(mood,label,duration){
+playOwl(host,mood,label);
+const began=performance.now(),times=[],positions=new Set();
+await new Promise(resolve=>{
+function sample(t){
+times.push(t);
+const part=host.querySelector(mood==='celebrate'?'.owl-action-motion':'.owl-wing-right');
+positions.add(getComputedStyle(part).transform);
+if(t-times[0]>=1000)resolve();else requestAnimationFrame(sample);
+}
+requestAnimationFrame(sample);
+});
+const fps=(times.length-1)*1000/(times.at(-1)-times[0]);
+const remaining=duration-(performance.now()-began)+180;
+if(remaining>0)await new Promise(resolve=>setTimeout(resolve,remaining));
+const idle=host.querySelector('.owl-character').dataset.mood==='idle';
+const row=document.createElement('tr');
+row.innerHTML='<td>'+label+'</td><td>'+fps.toFixed(1)+'</td><td>'+positions.size+'</td><td>'+(idle?'Ja':'Nej')+'</td>';
+output.append(row);
+return fps>=30&&positions.size>=25&&idle;
+}
+(async()=>{
+if(matchMedia('(prefers-reduced-motion:reduce)').matches){
+document.querySelector('#summary').textContent='Reducerad rörelse är aktiverad. Animeringsmätningen hoppades över.';
+return;
+}
+let good=true;
+for(const [mood,label,duration] of checks)good=await measure(mood,label,duration)&&good;
+document.querySelector('#summary').textContent=good?'Godkänd: alla rörelser uppmättes till minst 30 fps, lederna ändrade position kontinuerligt och figuren återgick till vila.':'Kontrollen är klar. Ett eller flera krav uppfylldes inte i den här webbläsaren.';
+})().catch(error=>{document.querySelector('#summary').textContent='Kontrollen misslyckades: '+error.message;});
+</script></html>
