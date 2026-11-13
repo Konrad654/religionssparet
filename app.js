@@ -56,6 +56,10 @@ const deck = [
   ...courses.flatMap(course => topics.flatMap((_, i) => lessonQuestions(course, i).map(([q,a], j) => ({id:course.id+'-'+i+(j ? '-'+j : ''),q,a,group:course.id}))))
 ];
 
+function mascotMessage(message, mood = '') {
+  return `<div class="mascot-message ${mood}"><img src="mascot.webp" alt="" width="1254" height="1254"><p>${message}</p></div>`;
+}
+
 function home() {
   const next = courses.find(course => count(course) < topics.length);
   const total = courses.reduce((sum, course) => sum + count(course), 0);
@@ -63,12 +67,10 @@ function home() {
     <h1>Lär känna de<br>abrahamitiska<br>religionerna.</h1>
     <p>Gå korta lektioner, jämför perspektiv och testa vad du kan inför Religion 1.</p>
     <a href="#${next?.id || 'ovningar'}" class="btn">${total === 0 ? 'Börja plugga' : next ? 'Fortsätt plugga' : 'Repetera'} <span aria-hidden="true">→</span></a></div>
-    <svg class="hero-art" viewBox="0 0 280 225" aria-hidden="true">
-      <circle cx="143" cy="112" r="95" fill="#7759d3"/><circle cx="143" cy="112" r="81" fill="none" stroke="#9a7bed" stroke-width="2" stroke-dasharray="4 7"/>
-      <path d="M30 61h25m-12-12v24m181 81h27m-13-13v26" stroke="#e8bcff" stroke-width="4" stroke-linecap="round"/>
-      <path d="m220 38 4 11 11 4-11 4-4 11-4-11-11-4 11-4zM52 158l4 11 11 4-11 4-4 11-4-11-11-4 11-4z" fill="#ffd08d"/>
-      <image href="icon.svg" x="77" y="45" width="133" height="133" transform="rotate(-8 143 111)"/>
-    </svg></section>
+    <div class="mascot-welcome">
+      <div class="mascot-portrait"><img src="mascot.webp" alt="Religionsspårets ugglemaskot med glasögon, blå mantel och en bok" width="1254" height="1254" fetchpriority="high"></div>
+      <p class="mascot-bubble">${total === 18 ? 'Alla lektioner klara! Vad vill du repetera?' : total ? 'Välkommen tillbaka! Vi fortsätter där du slutade.' : 'Redo att börja? Vi tar en lektion i taget.'}</p>
+    </div></section>
     <section class="section"><div class="section-head"><h2>Dina studiespår</h2><p class="muted">${total} av 18 lektioner klara</p></div>
     <div class="grid">${courses.map(course => `<a class="card ${course.color}" href="#${course.id}">${tile(course.symbol)}<h3>${course.name}</h3><p>${course.era}</p>${meter(Math.round(count(course)/6*100))}<div class="card-foot"><span>${count(course)} / 6 lektioner</span><span>→</span></div></a>`).join('')}</div></section>
     <section class="section"><div class="section-head"><h2>Öva på ditt sätt</h2></div>
@@ -167,7 +169,8 @@ function showRetry() {
   const {missed, questions, retry} = exercise;
   const count = missed.length;
   showActivity('Resultat', `<p>${retry ? 'Du har fortfarande' : 'Du fick'} <strong>${count} fel av ${questions.length}</strong>.</p>
-    <p>Gör om de frågor du missade. XP delas ut när alla frågor är rätt besvarade.</p>
+    ${mascotMessage('Vi övar på det som var svårt. Du får ett nytt försök på bara de frågor du missade.')}
+    <p>XP delas ut när alla frågor är rätt besvarade.</p>
     <button class="btn primary" data-act="retryQuiz">Gör om ${count === 1 ? 'frågan' : 'de '+count+' frågorna'}</button>`);
 }
 function showQuestion(moveFocus = true) {
@@ -179,13 +182,13 @@ function showQuestion(moveFocus = true) {
   showActivity(label, `<div class="counter">Fråga ${round.index+1} av ${round.questions.length}</div>
     ${meter(Math.round(round.index/round.questions.length*100))}<h3 class="reading">${question}</h3>
     <div class="options">${round.options.map((option,i) => `<button class="btn option ${round.checked && option === correct ? 'correct' : round.checked && option === round.choice ? 'incorrect' : round.choice === option ? 'selected' : ''}" data-act="choose" data-i="${i}" aria-pressed="${round.choice === option}" ${round.checked ? 'disabled' : ''}>${option}</button>`).join('')}</div>
-    <div class="result ${good ? 'good' : 'bad'}" role="status">${round.checked ? (good ? 'Rätt svar.' : 'Rätt svar är '+correct+'.') : ''}</div>
+    <div class="result ${good ? 'good' : 'bad'}" role="status">${round.checked ? mascotMessage(good ? 'Rätt svar! Bra jobbat.' : 'Rätt svar är '+correct+'. Vi övar på den här igen efter omgången.',good ? 'celebrate' : '') : ''}</div>
     <button class="btn primary" data-act="${round.checked ? 'advance' : 'check'}" ${round.choice === null ? 'disabled' : ''}>${round.checked ? round.index + 1 === round.questions.length ? 'Visa resultat' : 'Nästa fråga' : 'Kontrollera svar'}</button>`, moveFocus);
 }
 function finish(title, desc, xp) {
   state.xp += xp;
   render();
-  showActivity(title, `<div class="callout">${xp ? `<h3>+${xp} XP</h3>` : ''}<p>${desc}</p></div><button class="btn primary" data-act="close">Klart</button>`);
+  showActivity(title, `${mascotMessage('Du klarade det! Ta med dig det du har lärt dig till nästa övning.','celebrate')}<div class="callout">${xp ? `<h3>+${xp} XP</h3>` : ''}<p>${desc}</p></div><button class="btn primary" data-act="close">Klart</button>`);
 }
 function showMatching(moveFocus = true) {
   const round = exercise;
