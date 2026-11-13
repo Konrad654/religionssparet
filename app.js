@@ -25,8 +25,7 @@ const shuffle = values => {
   return mixed;
 };
 const main = document.querySelector('main');
-const dialog = document.querySelector('dialog');
-const activity = document.querySelector('#activity');
+let activity;
 const key = 'religionssparet-v1';
 const defaults = {done:{}, xp:0, own:[], review:{}, notes:{}, rounds:{}};
 let state = defaults;
@@ -138,8 +137,11 @@ function gamesPage() {
 
 function render(focus = false) {
   const route = location.hash.slice(1) || 'start';
-  const active = routes.some(([id]) => id === route) ? route : 'start';
+  const base = route.split('/')[0];
+  const active = routes.some(([id]) => id === base) ? base : 'start';
   nav.innerHTML = routes.map(([id,label,symbol], i) => `${i === 1 || i === 4 ? `<div class="navlabel">${i === 1 ? 'STUDIESPÅR' : 'ÖVA OCH JÄMFÖR'}</div>` : ''}<a class="navlink" href="#${id}" ${id === active ? 'aria-current="page"' : ''}>${icon(symbol)}${label}</a>`).join('');
+  if (route.includes('/') && renderActivity(route)) { update(); return; }
+  document.title = 'Religionsspåret · Religion 1';
   const course = courses.find(course => course.id === active);
   main.innerHTML = course ? coursePage(course) : {start:home,jamfor:comparePage,kort:cardsPage,ovningar:gamesPage}[active]();
   update();
@@ -149,13 +151,43 @@ function render(focus = false) {
   }
 }
 
-function showActivity(label, body, moveFocus = true) {
-  activity.innerHTML = `<div class="dialog-top"><h2 id="dialogTitle" tabindex="-1">${label}</h2><button class="chip" data-act="close">Stäng</button></div>${body}`;
-  if (!dialog.open) dialog.showModal();
-  if (moveFocus) document.querySelector('#dialogTitle').focus();
-}
 let exercise;
 let opener;
+const activityKey = path => 'religionssparet-activity-'+path;
+function showActivity(label, body, moveFocus = true) {
+  if (!main.querySelector('#activity')) main.innerHTML = '<article class="activity-page"><div id="activity"></div></article>';
+  activity = main.querySelector('#activity');
+  activity.innerHTML = '<div class="activity-top"><a class="chip" href="#'+location.hash.slice(1).split('/')[0]+'">← Tillbaka</a><span class="eyebrow">Religionsspåret</span></div><h1 id="activityTitle" tabindex="-1">'+label+'</h1>'+body;
+  document.title = label+' · Religionsspåret';
+  try { sessionStorage.setItem(activityKey(location.hash.slice(1)),JSON.stringify(exercise)); } catch {}
+  if (moveFocus) { activity.querySelector('#activityTitle').focus({preventScroll:true}); window.scrollTo(0,0); }
+}
+function renderActivity(path) {
+  const parts=path.split('/');
+  const course=courses.find(c=>c.id===parts[0]);
+  const lesson=course && parts[1]==='lektion' && /^\d+$/.test(parts[2]||'') ? Number(parts[2])-1 : -1;
+  const isLesson=lesson>=0 && lesson<topics.length && parts.length===3;
+  const isLessonQuiz=lesson>=0 && lesson<topics.length && parts.length===4 && parts[3]==='quiz';
+  const kind=parts[0]==='ovningar' && parts.length===2 ? parts[1] : null;
+  if (!isLesson && !isLessonQuiz && !['quiz','match','timeline'].includes(kind)) return false;
+  main.innerHTML='<article class="activity-page"><div id="activity"></div></article>';
+  activity=main.querySelector('#activity');
+  if(isLesson){handlers.lesson({course:course.id,i:String(lesson)});return true;}
+  let saved;
+  try {saved=JSON.parse(sessionStorage.getItem(activityKey(path)));} catch {}
+  if(saved){
+    exercise=saved;
+    if(saved.finished) renderFinish();
+    else if(kind==='match') showMatching();
+    else if(kind==='timeline') showTimeline();
+    else if(saved.summary) showRetry();
+    else showQuestion();
+  } else if(isLessonQuiz){
+    exercise={course,i:String(lesson)};
+    handlers.lessonQuiz();
+  } else handlers[kind]();
+  return true;
+}
 function startQuiz(questions, lessonId) {
   exercise = {questions, total:questions.length, index:0, missed:[], lessonId, retry:false, summary:false, choice:null, checked:false};
   saveQuiz();
@@ -191,7 +223,12 @@ function showQuestion(moveFocus = true) {
 }
 function finish(title, desc, xp) {
   state.xp += xp;
-  render();
+  exercise.finished={title,desc,xp};
+  update();
+  renderFinish();
+}
+function renderFinish() {
+  const {title,desc,xp}=exercise.finished;
   showActivity(title, `${mascotMessage('Du klarade det! Ta med dig det du har lärt dig till nästa övning.','celebrate')}<div class="callout">${xp ? `<h3>+${xp} XP</h3>` : ''}<p>${desc}</p></div><button class="btn primary" data-act="close">Klart</button>`);
 }
 function showMatching(moveFocus = true) {
@@ -309,7 +346,7 @@ const handlers = {
     next?.focus();
   },
   timelineDone() { finish('Tidslinjen är klar','Du placerade alla sex händelser i rätt ordning.',30); },
-  close() { dialog.close(); },
+  close() { location.hash=location.hash.slice(1).split('/')[0]; },
   compare({i}) {
     comparison = Number(i);
     render();
@@ -359,15 +396,21 @@ const handlers = {
   }
 };
 document.addEventListener('click', event => {
-  const button = event.target.closest('[data-act]');
-  if (!button) return;
-  if (!dialog.open) opener = button.dataset;
-  handlers[button.dataset.act](button.dataset);
-});
-dialog.addEventListener('close', () => {
-  if (opener?.act === 'lesson' && location.hash === '#'+opener.course) render();
-  const buttons = [...main.querySelectorAll('[data-act]')];
-  buttons.find(button => Object.entries(opener || {}).every(([key,value]) => button.dataset[key] === value))?.focus();
+  const button=event.target.closest('[data-act]');
+  if(!button)return;
+  const data=button.dataset;
+  let path;
+  if(data.act==='lesson') path=data.course+'/lektion/'+(Number(data.i)+1);
+  else if(data.act==='lessonQuiz') path=location.hash.slice(1)+'/quiz';
+  else if(['quiz','match','timeline'].includes(data.act)) path='ovningar/'+data.act;
+  if(path){
+    try {
+      if(['quiz','match','timeline'].includes(data.act)) sessionStorage.removeItem(activityKey(path));
+      else if(data.act==='lessonQuiz' && JSON.parse(sessionStorage.getItem(activityKey(path)))?.finished) sessionStorage.removeItem(activityKey(path));
+    } catch {}
+    opener={...data};location.hash=path;return;
+  }
+  handlers[data.act]?.(data);
 });
 document.addEventListener('submit', event => {
   if (event.target.id !== 'create-card') return;
@@ -396,7 +439,6 @@ document.addEventListener('input', event => {
 });
 window.addEventListener('hashchange', () => {
   if (location.hash === '#main') return;
-  if (dialog.open) dialog.close();
   render(true);
 });
 render();
