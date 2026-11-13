@@ -12,14 +12,9 @@ dialog{color:var(--ink);border:1px solid var(--line);border-radius:23px;padding:
 @media(prefers-reduced-motion:no-preference){.card,.btn{transition:transform .15s,filter .15s,border-color .15s}}
 .compare-grid p + p{margin-top:10px}
 
-/* Static key poses are also the fallback for reduced motion. */
+/* Mascot layout; independent joint motion is defined in owl-puppet.css. */
 .mascot-welcome{display:flex;flex-direction:column;align-items:center;min-width:0;position:relative}
 .owl-character{position:relative;display:block;width:260px;max-width:100%;aspect-ratio:1;background:none;border:0;border-radius:20px;padding:0;isolation:isolate;-webkit-tap-highlight-color:transparent}
-.owl-sprite{display:block;width:100%;height:100%;background-image:url("owl-motion.webp");background-size:600% 400%;background-repeat:no-repeat;background-position:0 0;position:relative;z-index:1}
-.owl-shadow{position:absolute;bottom:2%;left:25%;width:50%;height:6%;border-radius:50%;background:#26145930;z-index:0}
-.owl-sprite[data-mood="wave"]{background-position:0 33.333333%}
-.owl-sprite[data-mood="celebrate"]{background-position:100% 66.666667%}
-.owl-sprite[data-mood="think"]{background-position:40% 100%}
 .hero .owl-speech{position:relative;margin:0 0 6px;max-width:290px;border-radius:16px;background:white;color:#39247c;padding:13px 17px;text-align:center;font-size:14px;font-weight:750;line-height:1.45}
 .hero .owl-speech:after{content:"";position:absolute;bottom:-7px;left:calc(50% - 7px);width:14px;height:14px;background:white;transform:rotate(45deg)}
 .owl-invitation{font-size:11px;color:#e8ddff;margin:3px 0 9px}
@@ -29,11 +24,9 @@ dialog{color:var(--ink);border:1px solid var(--line);border-radius:23px;padding:
 .owl-actions button:active{transform:translateY(2px);border-bottom-width:1px}
 .mascot-message{display:flex;align-items:center;gap:12px;margin:16px 0;min-width:0}
 .mascot-message .owl-character{width:100px;flex:none}
-.mascot-message .owl-shadow{background:#211b3812}
 .mascot-message .owl-speech{position:relative;background:#f2edfc;border:1px solid var(--line);border-radius:15px;margin:0;padding:12px 15px;line-height:1.5;font-size:14px}
 .mascot-message .owl-speech:before{content:"";position:absolute;top:calc(50% - 5px);left:-6px;width:10px;height:10px;background:#f2edfc;border-left:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
 @media(prefers-reduced-motion:no-preference){
-  .owl-character:hover .owl-shadow{background:#26145940}
 }
 @media(max-width:750px){
   .hero{grid-template-columns:minmax(0,1fr) 185px}

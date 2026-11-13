@@ -12,11 +12,11 @@ Importera GitHub-repot i Vercel. Projektet är en statisk webbapp utan beroenden
 
 ## Maskotens animationer
 
-Blinkning/vila, vinkning, glädjeskutt och tänkande använder transparenta WebP-atlaser
-med 30 bildrutor per sekund. Mellanrutorna skapas med dubbelriktad optisk
-flödesinterpolering från de ursprungliga 24 genererade poserna i `owl-motion.webp`.
-Alla rörelser avslutas i samma vilopos. Systemets inställning för reducerad
-rörelse respekteras och visar stillbilder.
+Ugglan är en vektorfigur med separata leder för huvud, vinge, blick, ögonlock,
+bok, mantel och fötter. CSS animerar delarnas positioner och rotationer
+kontinuerligt vid skärmens uppdateringsfrekvens. Inga bildrutor eller
+bildinterpolering används. Vinkning, tänkande och glädjeskutt aktiveras med
+knappar och quizets återkoppling. Blicken följer pekaren i viloläget.
+Reducerad rörelse ger stilla uttryck. Inga externa bibliotek behövs.
 
-Återskapa atlaserna och `owl-motion.css` med `python3 scripts/build_owl_motion.py`.
-Det kräver Pillow, NumPy och OpenCV; inga av dessa behövs i webbappen.
+Formen definieras i `mascot.js`, rörelserna i `owl-puppet.css`.

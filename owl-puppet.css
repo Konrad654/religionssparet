@@ -1,0 +1,83 @@
+/* Independent vector joints animated continuously at the display refresh rate. */
+.owl-puppet{display:block;width:100%;height:100%;overflow:visible;pointer-events:none;filter:drop-shadow(0 8px 8px #17113c14)}
+.owl-puppet g,.owl-puppet ellipse,.owl-puppet path{transform-box:view-box}
+.owl-action-motion,.owl-breathe{transform-origin:160px 290px}
+.owl-cape{transform-origin:160px 181px}
+.owl-book{transform-origin:116px 222px}
+.owl-wing-right{transform-origin:220px 193px}
+.owl-foot-left{transform-origin:137px 280px}
+.owl-foot-right{transform-origin:185px 280px}
+.owl-head-motion,.owl-head-look{transform-origin:160px 163px}
+.owl-ground-shadow{transform-origin:160px 315px}
+.owl-eye-open{transform-origin:160px 106px}
+.owl-brow-left{transform-origin:120px 69px}
+.owl-eye-closed,.owl-eye-smile,.owl-celebration{opacity:0}
+.owl-character{--owl-look-x:0px;--owl-look-y:0px;--owl-look-angle:0deg}
+.owl-actions{gap:8px}
+.owl-actions button{border-radius:13px;padding:9px 15px;box-shadow:0 2px 0 #21144d35;transition:background .15s,transform .15s}
+@media(prefers-reduced-motion:no-preference){
+.owl-breathe{animation:puppet-breathe 3.8s ease-in-out infinite}
+.owl-cape{animation:puppet-cape-idle 3.8s ease-in-out infinite}
+.owl-head-motion{animation:puppet-head-idle 5.5s ease-in-out infinite}
+.owl-eye-open{animation:puppet-blink 5.2s linear infinite}
+.owl-eye-closed{animation:puppet-lids 5.2s linear infinite}
+.owl-head-look{transform:rotate(var(--owl-look-angle));transition:transform .18s ease-out}
+.owl-gaze{transform:translate(var(--owl-look-x),var(--owl-look-y));transition:transform .12s ease-out}
+.owl-character[data-mood="wave"] .owl-action-motion{animation:puppet-wave-body 1.9s ease-in-out both}
+.owl-character[data-mood="wave"] .owl-wing-right{animation:puppet-wave-wing 1.9s cubic-bezier(.4,0,.25,1) both}
+.owl-character[data-mood="wave"] .owl-head-motion{animation:puppet-wave-head 1.9s ease-in-out both}
+.owl-character[data-mood="wave"] .owl-book{animation:puppet-wave-book 1.9s ease-in-out both}
+.owl-character[data-mood="think"] .owl-action-motion{animation:puppet-think-body 2.8s ease-in-out both}
+.owl-character[data-mood="think"] .owl-head-motion{animation:puppet-think-head 2.8s cubic-bezier(.4,0,.2,1) both}
+.owl-character[data-mood="think"] .owl-wing-right{animation:puppet-think-wing 2.8s cubic-bezier(.4,0,.2,1) both}
+.owl-character[data-mood="think"] .owl-pupil-motion{animation:puppet-think-gaze 2.8s ease-in-out both}
+.owl-character[data-mood="think"] .owl-brow-left{animation:puppet-think-brow 2.8s ease-in-out both}
+.owl-character[data-mood="celebrate"] .owl-action-motion{animation:puppet-jump 1.9s cubic-bezier(.35,0,.3,1) both}
+.owl-character[data-mood="celebrate"] .owl-wing-right{animation:puppet-cheer-wing 1.9s ease-in-out both}
+.owl-character[data-mood="celebrate"] .owl-head-motion{animation:puppet-cheer-head 1.9s ease-in-out both}
+.owl-character[data-mood="celebrate"] .owl-book{animation:puppet-book-bounce 1.9s ease-in-out both}
+.owl-character[data-mood="celebrate"] .owl-cape{animation:puppet-cape-flap 1.9s ease-in-out both}
+.owl-character[data-mood="celebrate"] .owl-foot-left{animation:puppet-left-kick 1.9s ease-in-out both}
+.owl-character[data-mood="celebrate"] .owl-foot-right{animation:puppet-right-kick 1.9s ease-in-out both}
+.owl-character[data-mood="celebrate"] .owl-ground-shadow{animation:puppet-jump-shadow 1.9s ease-in-out both}
+.owl-character[data-mood="celebrate"] .owl-eye-open{animation:puppet-happy-open 1.9s ease-in-out both}
+.owl-character[data-mood="celebrate"] .owl-eye-closed{animation:none;opacity:0}
+.owl-character[data-mood="celebrate"] .owl-eye-smile{animation:puppet-happy-eyes 1.9s ease-in-out both}
+.owl-character[data-mood="celebrate"] .owl-celebration{animation:puppet-sparks-visible 1.9s ease-out both}
+.owl-character[data-mood="celebrate"] .owl-spark{animation:puppet-spark-flight 1.9s ease-out both;transform-origin:center}
+.mascot-welcome .owl-speech{animation:puppet-speech-in .35s ease-out both}
+}
+@keyframes puppet-breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-2px) scale(1.008,1.013)}}
+@keyframes puppet-cape-idle{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.018)}}
+@keyframes puppet-head-idle{0%,25%,100%{transform:rotate(0)}55%,70%{transform:rotate(2deg)}}
+@keyframes puppet-blink{0%,84%,90%,100%{transform:scaleY(1)}86%,88%{transform:scaleY(.035)}}
+@keyframes puppet-lids{0%,85%,89%,100%{opacity:0}86%,88%{opacity:1}}
+@keyframes puppet-wave-body{0%,100%{transform:rotate(0)}18%,75%{transform:rotate(-2deg)}88%{transform:rotate(1deg)}}
+@keyframes puppet-wave-wing{0%,100%{transform:rotate(0)}14%{transform:rotate(-145deg)}26%{transform:rotate(-115deg)}38%{transform:rotate(-151deg)}50%{transform:rotate(-115deg)}62%{transform:rotate(-151deg)}74%{transform:rotate(-120deg)}86%{transform:rotate(-140deg)}}
+@keyframes puppet-wave-head{0%,100%{transform:rotate(0)}20%,75%{transform:rotate(-5deg)}88%{transform:rotate(2deg)}}
+@keyframes puppet-wave-book{0%,100%{transform:rotate(0)}25%,75%{transform:rotate(3deg)}90%{transform:rotate(-1deg)}}
+@keyframes puppet-think-body{0%,100%{transform:translateY(0)}20%,80%{transform:translateY(2px)}}
+@keyframes puppet-think-head{0%,100%{transform:rotate(0) translate(0,0)}22%,76%{transform:rotate(-10deg) translate(-2px,1px)}88%{transform:rotate(2deg)}}
+@keyframes puppet-think-wing{0%,100%{transform:rotate(0)}24%,76%{transform:rotate(139deg)}42%,60%{transform:rotate(134deg)}88%{transform:rotate(-4deg)}}
+@keyframes puppet-think-gaze{0%,100%{transform:translate(0,0)}20%,76%{transform:translate(-4px,-5px)}}
+@keyframes puppet-think-brow{0%,100%{transform:rotate(0)}20%,76%{transform:translateY(-5px) rotate(-12deg)}}
+@keyframes puppet-jump{0%,100%{transform:translateY(0) scale(1) rotate(0)}10%{transform:translateY(4px) scale(1.07,.90)}27%{transform:translateY(-35px) scale(.97,1.04) rotate(-3deg)}43%{transform:translateY(2px) scale(1.07,.91)}53%{transform:translateY(0) scale(1)}62%{transform:translateY(3px) scale(1.05,.93)}77%{transform:translateY(-23px) scale(.98,1.03) rotate(3deg)}91%{transform:translateY(2px) scale(1.04,.95)}}
+@keyframes puppet-cheer-wing{0%,100%{transform:rotate(0)}20%,39%{transform:rotate(-153deg)}51%{transform:rotate(-130deg)}70%,86%{transform:rotate(-153deg)}}
+@keyframes puppet-cheer-head{0%,100%{transform:rotate(0)}27%{transform:rotate(-4deg) translateY(-3px)}46%{transform:rotate(3deg) translateY(2px)}77%{transform:rotate(4deg) translateY(-2px)}93%{transform:rotate(-2deg)}}
+@keyframes puppet-book-bounce{0%,100%{transform:rotate(0)}18%,65%{transform:rotate(-5deg)}34%,82%{transform:rotate(5deg)}49%,96%{transform:rotate(-2deg)}}
+@keyframes puppet-cape-flap{0%,100%{transform:scaleX(1)}11%,59%{transform:scaleX(.96)}29%,78%{transform:scaleX(1.12)}47%,94%{transform:scaleX(1.04)}}
+@keyframes puppet-left-kick{0%,12%,49%,61%,100%{transform:rotate(0)}27%,77%{transform:rotate(16deg) translateY(-4px)}}
+@keyframes puppet-right-kick{0%,12%,49%,61%,100%{transform:rotate(0)}27%,77%{transform:rotate(-18deg) translateY(-3px)}}
+@keyframes puppet-jump-shadow{0%,100%{transform:scaleX(1);opacity:1}10%,62%{transform:scaleX(1.08);opacity:1}27%{transform:scaleX(.65);opacity:.42}43%,91%{transform:scaleX(1.09);opacity:1}77%{transform:scaleX(.73);opacity:.55}}
+@keyframes puppet-happy-eyes{0%,9%,96%,100%{opacity:0}15%,90%{opacity:1}}
+@keyframes puppet-sparks-visible{0%,10%,100%{opacity:0}20%,73%{opacity:1}92%{opacity:0}}
+@keyframes puppet-spark-flight{0%,10%{transform:translate(0,15px) scale(.3)}70%,100%{transform:translate(var(--sx),var(--sy)) rotate(var(--sr)) scale(1)}}
+@keyframes puppet-speech-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){
+.owl-character[data-mood="think"] .owl-head-motion{transform:rotate(-8deg)}
+.owl-character[data-mood="think"] .owl-wing-right{transform:rotate(139deg)}
+.owl-character[data-mood="celebrate"] .owl-eye-open{opacity:0}
+.owl-character[data-mood="celebrate"] .owl-eye-smile{opacity:1}
+}
+
+@keyframes puppet-happy-open{0%,9%,96%,100%{opacity:1}15%,90%{opacity:0}}
